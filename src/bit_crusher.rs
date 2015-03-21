@@ -1,7 +1,8 @@
 
-use dsp::{Dsp, Sample };
+use dsp::{Dsp};
 use dsp::Settings as DspSettings;
 
+#[derive(Clone)]
 pub struct BitCrusher{
     pub bit_depth: u8, 
     pub amount: f32,
@@ -37,7 +38,7 @@ impl BitCrusher{
 
 impl Dsp<f32> for BitCrusher {
 
-    fn audio_requested(&mut self, output: &mut [f32], settings: DspSettings) {
+    fn audio_requested(&mut self, output: &mut [f32], _settings: DspSettings) {
         for sample in output.iter_mut() {
             *sample = self.decimate(*sample);
         }
