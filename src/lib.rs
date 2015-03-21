@@ -1,3 +1,4 @@
+//! A fucking sick BitCrushing lib of awesomeness!!!
 
 extern crate dsp;
 

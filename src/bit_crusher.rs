@@ -2,7 +2,7 @@
 use dsp::{Dsp};
 use dsp::Settings as DspSettings;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BitCrusher{
     pub bit_depth: u8, 
     pub amount: f32,
@@ -10,9 +10,9 @@ pub struct BitCrusher{
     pub y: f32,
 }
 
-
 impl BitCrusher{
 
+    /// Constructor for a BitCrusher given a bit depth and amount.
     pub fn new(bit_depth: u8, amount: f32) -> BitCrusher{
         BitCrusher {
             bit_depth: bit_depth,
@@ -22,10 +22,9 @@ impl BitCrusher{
         }
     }
 
+    /// A method for processing a single sample of audio.
     fn decimate(&mut self, sample: f32) -> f32 {
-        
         let m: i64 = 1<<(self.bit_depth-1);
-        
         self.cnt += self.amount;
         if self.cnt >= 1.0 {
 
@@ -34,10 +33,10 @@ impl BitCrusher{
         }
         self.y
     }
+
 }
 
 impl Dsp<f32> for BitCrusher {
-
     fn audio_requested(&mut self, output: &mut [f32], _settings: DspSettings) {
         for sample in output.iter_mut() {
             *sample = self.decimate(*sample);
