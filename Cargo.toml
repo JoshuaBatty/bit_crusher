@@ -1,0 +1,8 @@
+[package]
+
+name = "bit_crusher"
+version = "0.0.1"
+authors = ["josh"]
+
+[dependencies]
+dsp-chain = "*"
