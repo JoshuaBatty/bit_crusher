@@ -1,7 +1,7 @@
 [package]
 
 name = "bit_crusher"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["josh"]
 description = "Rusty Jen Down Sampling DSP"
 keywords = ["dsp", "bitcrush", "downsample", "audio", "effect"]
