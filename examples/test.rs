@@ -1,7 +1,7 @@
-#![feature(collections)]
 
 extern crate bit_crusher;
 extern crate dsp;
+extern crate num;
 
 use dsp::{Dsp, Event, Settings, SoundStream};
 use bit_crusher::BitCrusher;
@@ -32,10 +32,17 @@ fn main() {
             Event::In(input) => { ::std::mem::replace(&mut buffer, input); },
             Event::Out(output, settings) => {
                 bit_crusher.audio_requested(&mut buffer[..], settings);
-                output.clone_from_slice(&buffer[..]);
+
+                for (output_sample, sample) in output.iter_mut().zip(buffer.iter().map(|&s| s)) {
+                    *output_sample = sample;
+                }
+
+                // NOTE: The above should be replaced with the following once `clone_from_slice` is
+                // stabilised.
+                // output.clone_from_slice(&buffer[..]);
             },
             Event::Update(dt) => {
-                use std::num::Float;
+                use num::Float;
                 time += dt;
                 let new_amount = 0.5 + (time as f32 * 0.5).sin() * 0.5;
                 bit_crusher.set_amount(new_amount);
