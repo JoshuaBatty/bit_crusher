@@ -1,5 +1,5 @@
 
-use dsp::{Dsp, Sample};
+use dsp::{self, Sample};
 use dsp::Settings as DspSettings;
 
 /// A type for bit crushing a given number of channels.
@@ -69,7 +69,7 @@ impl Channel {
 
 }
 
-impl<S> Dsp<S> for Channel where S: Sample {
+impl<S> dsp::Node<S> for Channel where S: Sample {
     fn audio_requested(&mut self, output: &mut [S], _settings: DspSettings) {
         for sample in output.iter_mut() {
             *sample = self.decimate(*sample);
@@ -77,7 +77,7 @@ impl<S> Dsp<S> for Channel where S: Sample {
     }
 }
 
-impl<S> Dsp<S> for BitCrusher where S: Sample {
+impl<S> dsp::Node<S> for BitCrusher where S: Sample {
     fn audio_requested(&mut self, output: &mut [S], settings: DspSettings) {
         // For every frame in the output buffer.
         for frame in output.chunks_mut(settings.channels as usize) {

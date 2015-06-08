@@ -3,52 +3,59 @@ extern crate bit_crusher;
 extern crate dsp;
 extern crate num;
 
-use dsp::{Dsp, Event, Settings, SoundStream};
+use dsp::{CallbackFlags, CallbackResult, Node, Settings, SoundStream, StreamParams};
 use bit_crusher::BitCrusher;
 
-const SAMPLE_HZ: u32 = 44_100;
+const SAMPLE_HZ: f64 = 44_100.0;
 const FRAMES: u16 = 512;
-const CHANNELS: u16 = 2;
+const CHANNELS: i32 = 2;
 const BIT_DEPTH: u8 = 16;
 const AMOUNT: f32 = 0.5;
 
 fn main() {
-    
-    let mut sound_stream = SoundStream::<f32, f32>::new()
-        .settings(Settings { sample_hz: SAMPLE_HZ, frames: FRAMES, channels: CHANNELS })
-        .run()
-        .unwrap();
 
+    // Construct a new BitCrusher.
     let mut bit_crusher = BitCrusher::new(BIT_DEPTH, AMOUNT, CHANNELS as usize);
-
-    // We'll use this to process the input buffer and pass the result to the output.
-    let mut buffer = Vec::new();
 
     // We'll use this to modulate the bit_crush amount.
     let mut time = 0.0;
 
-    for event in sound_stream.by_ref() {
-        match event {
-            Event::In(input) => { ::std::mem::replace(&mut buffer, input); },
-            Event::Out(output, settings) => {
-                bit_crusher.audio_requested(&mut buffer[..], settings);
+    // Callback used to construct the duplex sound stream.
+    let callback = Box::new(move |input: &[f32], _in_settings: Settings,
+                                  output: &mut[f32], out_settings: Settings,
+                                  dt: f64,
+                                  _: CallbackFlags| {
+        use num::Float;
 
-                for (output_sample, sample) in output.iter_mut().zip(buffer.iter().map(|&s| s)) {
-                    *output_sample = sample;
-                }
-
-                // NOTE: The above should be replaced with the following once `clone_from_slice` is
-                // stabilised.
-                // output.clone_from_slice(&buffer[..]);
-            },
-            Event::Update(dt) => {
-                use num::Float;
-                time += dt;
-                let new_amount = 0.5 + (time as f32 * 0.5).sin() * 0.5;
-                bit_crusher.set_amount(new_amount);
-                println!("BitCrusher amount: {}", new_amount);
-            },
+        // Write the input samples to our output buffer.
+        for (out_sample, in_sample) in output.iter_mut().zip(input.iter()) {
+            *out_sample = *in_sample;
         }
+
+        time += dt;
+        let new_amount = 0.5 + (time as f32 * 0.5).sin() * 0.5;
+        bit_crusher.set_amount(new_amount);
+
+        // Process our output buffer.
+        bit_crusher.audio_requested(output, out_settings);
+
+        CallbackResult::Continue
+    });
+
+    // Build the params for our stream.
+    let stream_params = StreamParams::new().channels(CHANNELS);
+
+    // Construct the stream with default parameters.
+    let stream = SoundStream::new()
+        .sample_hz(SAMPLE_HZ)
+        .frames_per_buffer(FRAMES)
+        .duplex(stream_params, stream_params)
+        .run_callback(callback)
+        .unwrap();
+
+    // Wait for our stream to finish.
+    while let Ok(true) = stream.is_active() {
+        ::std::thread::sleep_ms(16);
     }
 
 }
