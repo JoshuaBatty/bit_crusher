@@ -1,7 +1,7 @@
 [package]
 
 name = "bit_crusher"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["josh"]
 description = "Rusty Jen Down Sampling DSP"
 keywords = ["dsp", "bitcrush", "downsample", "audio", "effect"]
@@ -11,7 +11,7 @@ homepage = "https://github.com/JoshuaBatty/bit_crusher"
 
 
 [dev-dependencies]
-num = "*"
+num = "0.1.27"
 
 [dependencies]
-dsp-chain = "*"
+dsp-chain = "0.9.0"
